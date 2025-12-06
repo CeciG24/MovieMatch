@@ -31,15 +31,15 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Light mode (default) */
+/* Light mode (default) - Gradiente suave */
 body {
-  background-color: #edb8ff;
-  color: #000000;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8eaf6 50%, #f3e5f5 100%);
+  color: #1a1a2e;
 }
 
 /* Dark mode */
 .dark body {
-  background-color: #0A0F1D;
+  background: linear-gradient(135deg, #0A0F1D 0%, #1a1f35 50%, #0f1419 100%);
   color: #fff;
 }
 
@@ -61,19 +61,50 @@ button {
 
 /* Light mode button */
 button {
-  background-color: #f9f9f9;
+  background-color: #ffffff;
+  color: #1a1a2e;
+  border: 1px solid #e0e0e0;
+}
+
+button:hover {
+  background-color: #f5f5f5;
+  border-color: #7c4dff;
 }
 
 /* Dark mode button */
 .dark button {
   background-color: #1a1a1a;
+  color: #fff;
+  border: 1px solid #333;
 }
 
-button:hover {
+.dark button:hover {
   border-color: #646cff;
+  background-color: #252525;
 }
 
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Mejoras para elementos en light mode */
+body:not(.dark) {
+  /* Sombras más suaves para light mode */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.18);
+
+  /* Colores de acento para light mode */
+  --accent-primary: #7c4dff;
+  --accent-secondary: #00b0ff;
+}
+
+.dark {
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+
+  --accent-primary: #a78bfa;
+  --accent-secondary: #22d3ee;
 }
