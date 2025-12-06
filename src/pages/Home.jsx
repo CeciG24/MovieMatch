@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; 
 import MovieCard from "../components/MovieCard";
 import SearchBar from "../components/SearchBar";
 import "../App.css";
@@ -7,6 +8,7 @@ import "../index.css";
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const Home = () => {
+  const navigate = useNavigate(); 
   const [trendingMovies, setTrendingMovies] = useState([]);
   const [actionMovies, setActionMovies] = useState([]);
   const [comedyMovies, setComedyMovies] = useState([]);
@@ -120,7 +122,7 @@ const Home = () => {
                 title: movie.Title,
                 poster: movie.Poster !== "N/A" ? movie.Poster : "/placeholder.jpg",
               }}
-              onViewDetails={(id) => (window.location.href = `/movie/${id}`)}
+              onViewDetails={(id) => navigate(`/movie/${id}`)} // ✅ CORREGIDO
               onAddToFavorites={(movie) => console.log("Favorite:", movie)}
             />
           ))}
