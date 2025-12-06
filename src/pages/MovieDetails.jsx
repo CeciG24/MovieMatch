@@ -1,14 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useFavorites } from '../context/FavoritesContext';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
+const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY; // Necesitas obtener una key de Google
 
 function MovieDetails() {
-    const { id } = useParams(); // Obtiene el movieId de la URL
+    const { id } = useParams();
     const navigate = useNavigate();
+    const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+    
     const [movie, setMovie] = useState(null);
+    const [trailer, setTrailer] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [trailerLoading, setTrailerLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showTrailer, setShowTrailer] = useState(false);
+
+    const isInFavorites = movie ? isFavorite(movie.imdbID) : false;
 
     useEffect(() => {
         const fetchMovieDetails = async () => {
@@ -22,6 +31,8 @@ function MovieDetails() {
                 if (data.Response === "True") {
                     setMovie(data);
                     setError(null);
+                    // Buscar trailer automáticamente
+                    fetchTrailer(data.Title, data.Year);
                 } else {
                     setError(data.Error || "Movie not found");
                 }
@@ -36,6 +47,39 @@ function MovieDetails() {
             fetchMovieDetails();
         }
     }, [id]);
+
+    const fetchTrailer = async (title, year) => {
+        try {
+            setTrailerLoading(true);
+            const searchQuery = `${title} ${year} official trailer`;
+            const response = await fetch(
+                `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=1&key=${YOUTUBE_API_KEY}`
+            );
+            const data = await response.json();
+            
+            if (data.items && data.items.length > 0) {
+                setTrailer(data.items[0]);
+            }
+        } catch (err) {
+            console.error("Error fetching trailer:", err);
+        } finally {
+            setTrailerLoading(false);
+        }
+    };
+
+    const handleFavoriteClick = () => {
+        if (isInFavorites) {
+            removeFromFavorites(movie.imdbID);
+        } else {
+            addToFavorites({
+                id: movie.imdbID,
+                title: movie.Title,
+                poster: movie.Poster,
+                year: movie.Year,
+                type: movie.Type
+            });
+        }
+    };
 
     if (loading) {
         return (
@@ -75,15 +119,61 @@ function MovieDetails() {
                     <span>Volver</span>
                 </button>
 
+                {/* Trailer Modal */}
+                {showTrailer && trailer && (
+                    <div 
+                        className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        onClick={() => setShowTrailer(false)}
+                    >
+                        <div 
+                            className="relative w-full max-w-5xl aspect-video bg-black rounded-xl overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                onClick={() => setShowTrailer(false)}
+                                className="absolute top-4 right-4 z-50 bg-red-500 hover:bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center text-xl font-bold transition"
+                            >
+                                ✕
+                            </button>
+                            <iframe
+                                width="100%"
+                                height="100%"
+                                src={`https://www.youtube.com/embed/${trailer.id.videoId}?autoplay=1`}
+                                title="YouTube video player"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            ></iframe>
+                        </div>
+                    </div>
+                )}
+
                 {/* Movie content */}
                 <div className="grid md:grid-cols-[300px,1fr] gap-8">
                     {/* Poster */}
-                    <div className="flex justify-center md:justify-start">
+                    <div className="flex flex-col gap-4 justify-center md:justify-start">
                         <img
                             src={movie.Poster !== "N/A" ? movie.Poster : "/placeholder.jpg"}
                             alt={movie.Title}
                             className="rounded-xl shadow-2xl w-full max-w-sm border border-white/20"
                         />
+                        
+                        {/* Trailer button below poster */}
+                        {trailer && (
+                            <button
+                                onClick={() => setShowTrailer(true)}
+                                className="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 px-4 py-3 rounded-lg font-semibold text-white transition-all hover:scale-105 active:scale-95 shadow-lg flex items-center justify-center gap-2"
+                            >
+                                <span className="text-xl">▶️</span>
+                                Watch Trailer
+                            </button>
+                        )}
+                        
+                        {trailerLoading && (
+                            <div className="text-center text-gray-400 text-sm py-2">
+                                Buscando trailer...
+                            </div>
+                        )}
                     </div>
 
                     {/* Details */}
@@ -127,6 +217,27 @@ function MovieDetails() {
                                 </span>
                             ))}
                         </div>
+
+                        {/* Trailer preview (mobile) */}
+                        {trailer && (
+                            <div className="md:hidden">
+                                <button
+                                    onClick={() => setShowTrailer(true)}
+                                    className="w-full relative overflow-hidden rounded-xl border-2 border-red-500/50 hover:border-red-500 transition-all group"
+                                >
+                                    <img
+                                        src={trailer.snippet.thumbnails.high.url}
+                                        alt="Trailer thumbnail"
+                                        className="w-full h-48 object-cover"
+                                    />
+                                    <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                                        <div className="bg-red-600 group-hover:bg-red-500 rounded-full w-16 h-16 flex items-center justify-center text-white text-2xl group-hover:scale-110 transition-transform">
+                                            ▶️
+                                        </div>
+                                    </div>
+                                </button>
+                            </div>
+                        )}
 
                         {/* Plot */}
                         <div>
@@ -179,10 +290,14 @@ function MovieDetails() {
                         {/* Action buttons */}
                         <div className="flex gap-4 pt-4">
                             <button
-                                onClick={() => console.log("Add to favorites:", movie)}
-                                className="flex-1 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 px-6 py-3 rounded-lg font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg"
+                                onClick={handleFavoriteClick}
+                                className={`flex-1 px-6 py-3 rounded-lg font-semibold transition-all hover:scale-105 active:scale-95 shadow-lg ${
+                                    isInFavorites
+                                        ? "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700"
+                                        : "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600"
+                                }`}
                             >
-                                ❤️ Add to Favorites
+                                {isInFavorites ? "❤️ Remove from Favorites" : "❤️ Add to Favorites"}
                             </button>
                             {movie.imdbID && (
                                 <a
