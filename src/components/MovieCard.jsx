@@ -1,6 +1,19 @@
 import React from "react";
+import { useFavorites } from "../context/FavoritesContext";
 
-const MovieCard = ({ movie, onAddToFavorites, onViewDetails }) => {
+const MovieCard = ({ movie, onViewDetails }) => {
+  const { addToFavorites, removeFromFavorites, isFavorite } = useFavorites();
+  const isInFavorites = isFavorite(movie.id);
+
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation();
+    if (isInFavorites) {
+      removeFromFavorites(movie.id);
+    } else {
+      addToFavorites(movie);
+    }
+  };
+
   return (
     <div
       className="group w-48 rounded-xl overflow-hidden cursor-pointer flex flex-col
@@ -15,6 +28,13 @@ const MovieCard = ({ movie, onAddToFavorites, onViewDetails }) => {
       <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 via-pink-500/0 to-cyan-500/0 
         group-hover:from-purple-500/10 group-hover:via-pink-500/10 group-hover:to-cyan-500/10 
         transition-all duration-300 rounded-xl pointer-events-none z-10"></div>
+
+      {/* Favorite indicator */}
+      {isInFavorites && (
+        <div className="absolute top-2 left-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center z-20 shadow-lg">
+          ❤️
+        </div>
+      )}
 
       {/* Imagen */}
       <div className="w-full h-72 overflow-hidden relative">
@@ -47,16 +67,17 @@ const MovieCard = ({ movie, onAddToFavorites, onViewDetails }) => {
           </button>
 
           <button
-            onClick={() => onAddToFavorites(movie)}
-            className="flex-1 px-3 py-2 text-xs rounded-lg font-medium
-            bg-gradient-to-r from-red-500/70 to-pink-500/70 
-            hover:from-red-500/90 hover:to-pink-500/90
-            backdrop-blur-md border border-red-400/30
-            text-white transition-all duration-200
+            onClick={handleFavoriteClick}
+            className={`flex-1 px-3 py-2 text-xs rounded-lg font-medium
+            backdrop-blur-md transition-all duration-200
             hover:scale-105 active:scale-95
-            shadow-lg shadow-red-500/20"
+            shadow-lg ${
+              isInFavorites
+                ? "bg-gradient-to-r from-red-600/90 to-pink-600/90 hover:from-red-700/90 hover:to-pink-700/90 border border-red-400/50 shadow-red-500/30"
+                : "bg-gradient-to-r from-red-500/70 to-pink-500/70 hover:from-red-500/90 hover:to-pink-500/90 border border-red-400/30 shadow-red-500/20"
+            }`}
           >
-            ❤️ Save
+            {isInFavorites ? "❤️ Saved" : "❤️ Save"}
           </button>
         </div>
       </div>
