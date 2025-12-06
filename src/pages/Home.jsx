@@ -142,14 +142,6 @@ const Home = () => {
       >
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-black/80 z-10"></div>
-        
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-            backgroundSize: '40px 40px'
-          }}></div>
-        </div>
 
         {/* Content */}
         <div className="relative z-20 text-center px-6 max-w-4xl">
